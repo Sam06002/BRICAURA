@@ -5,8 +5,32 @@ from datetime import datetime, timezone
 from enum import StrEnum
 
 
+class LeadType(StrEnum):
+    """Primary categorization of lead source/role."""
+
+    CUSTOMER = "customer"
+    PROPERTY = "property"
+    FLATMATE = "flatmate"
+    UNKNOWN = "unknown"
+
+
+class TransactionType(StrEnum):
+    """Financial transaction mode."""
+
+    RENT = "rent"
+    BUY_SALE = "buy/sale"
+    UNKNOWN = "unknown"
+
+
+class FlatmateIntent(StrEnum):
+    """Specific role for flatmate listings."""
+
+    LOOKING_FOR_FLATMATE = "looking_for_flatmate"
+    OFFERING_ROOM = "offering_room"
+
+
 class LeadIntent(StrEnum):
-    """Customer intent classification."""
+    """Legacy intent classification (retained for backward compatibility)."""
 
     BUY = "buy"
     RENT = "rent"
@@ -51,6 +75,9 @@ class ExtractedLead:
     """Structured property and customer requirements extracted from a RawLead."""
 
     lead_id: str
+    lead_type: LeadType = LeadType.UNKNOWN
+    transaction_type: TransactionType = TransactionType.UNKNOWN
+    flatmate_intent: FlatmateIntent | None = None
     intent: LeadIntent = LeadIntent.UNKNOWN
     property_type: PropertyType = PropertyType.UNKNOWN
     bedrooms: int | None = None

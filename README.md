@@ -1,56 +1,53 @@
-# Real Estate Brokerage Lead Management CRM
+# BRICAURA - Real Estate Brokerage Lead Management System
 
-An incremental lead aggregation and Customer Relationship Management (CRM) system designed for small real estate brokerages.
+An incremental lead aggregation and management system for real estate brokerages.
 
 ---
 
 ## 1. Project Purpose
 
-The system provides an automated pipeline to:
-- Aggregate permitted real estate and customer lead posts from multiple sources.
-- Preserve original raw content for auditability and compliance.
-- Extract structured property criteria and customer information.
-- Normalize and deduplicate incoming lead records.
-- Persist leads into a central database and/or Google Sheets.
-- Match potential buyers/renters with relevant property listings.
-- Track lead lifecycle status across the brokerage.
-- Send targeted notifications and actionable alerts to agents.
+BRICAURA has a single core purpose: **Collect and maintain real-estate leads from permitted sources.**
+
+The system captures and manages three primary lead categories:
+1. **CUSTOMER**:
+   - Person looking to rent a property
+   - Person looking to buy a property
+2. **PROPERTY**:
+   - Owner/agent posting a property for rent
+   - Owner/agent posting a property for sale
+3. **FLATMATE**:
+   - Person looking for a flatmate
+   - Person offering a room / looking for a flatmate
+
+The system strictly preserves the original raw post content for auditability while extracting structured metadata.
+
+> [!NOTE]
+> **Explicit Scope Boundary**: BRICAURA is solely responsible for lead collection, categorization, and maintenance. Customer-property matching, recommendation ranking, and automated matching workflows are explicitly out of scope.
 
 ---
 
-## 2. Current Scope (Stage 1: Foundation)
+## 2. Current Scope
 
-This repository is currently at **Stage 1 (Foundation)**. The focus of this stage is establishing a clean, robust, and extensible Python project architecture with zero unnecessary complexity.
-
-### What is Included in Stage 1:
-- Clean module structure separating application logic, configuration, and automated tests.
-- Environment variable configuration handling via Python standard library with `.env` loading support.
-- Minimal application bootstrap and logging entry point (`app/main.py`).
-- Automated test suite setup compatible with standard `unittest` and `pytest`.
-- Development scaffolding (`.gitignore`, `.env.example`, `requirements.txt`).
-
-### Intentionally Excluded Functionality in Stage 1:
-To maintain strict incremental delivery, the following features are **intentionally omitted** at this stage and will be built in subsequent phases:
-- Source connectors and scrapers (Reddit, Facebook, Telegram, etc.).
-- AI / LLM extraction pipelines.
-- Data normalization and deduplication engines.
-- Database ORMs and Google Sheets API integrations.
-- Customer-property matching algorithms.
-- Notification dispatchers (email, SMS, webhooks).
-- Web dashboards and UI interfaces.
+The system provides:
+- Clean module structure separating application logic, domain models, extraction, configuration, and tests.
+- Preserved raw lead model (`RawLead`) and structured extraction model (`ExtractedLead`).
+- Clear separation of **Lead Type** (`customer`, `property`, `flatmate`), **Transaction Type** (`rent`, `buy/sale`), and **Flatmate Intent** (`looking_for_flatmate`, `offering_room`).
+- Environment variable configuration handling via Python standard library with `.env` support.
+- Abstract storage interface (`RawLeadStorage`) with Google Sheets persistence (`GoogleSheetsStorage`).
+- Single manual CLI ingestion (`python -m app.ingest`) and bulk ingestion (`python -m app.bulk_ingest`).
+- Content fingerprinting & deduplication (`DeduplicationFilter`).
 
 ---
 
-## 3. Development Stages Roadmap
+## 3. Development Roadmap
 
 | Stage | Title | Description | Status |
 |---|---|---|---|
-| **Stage 1** | **Foundation** | Core repository structure, configuration management, entry point, test suite scaffolding. | **Current** |
-| **Stage 2** | **Raw Ingestion & Storage** | Ingestion interfaces for permitted sources, raw payload persistence, source adapters. | *Planned* |
-| **Stage 3** | **Extraction & Normalization** | Structured data extraction (properties, customer budgets, locations) and validation. | *Planned* |
-| **Stage 4** | **Deduplication & CRM Persistence** | Duplicate detection, lead entity resolution, database and Google Sheets storage. | *Planned* |
-| **Stage 5** | **Matching Engine & Status Tracking**| Buyer-property matching algorithms, lead lifecycle status workflows. | *Planned* |
-| **Stage 6** | **Notifications & Alerts** | Agent dispatching, instant notifications, and outbound messaging. | *Planned* |
+| **Stage 1** | **Foundation** | Core repository structure, configuration management, entry point, test suite scaffolding. | **Complete** |
+| **Stage 2** | **Raw Ingestion & Storage** | Google Sheets persistence interface, single and bulk lead ingestion, deduplication. | **Complete** |
+| **Stage 3** | **Structured Lead Classification** | Rule-based extraction separating lead type, transaction type, flatmate intent, bedrooms, and budgets. | **Active** |
+| **Stage 4** | **Source Connectors & Feed Listeners** | Automated connectors for permitted community and message feeds. | *Planned* |
+| **Stage 5** | **Lead Lifecycle & Maintenance** | Tracking lead freshness, archival, and status management. | *Planned* |
 
 ---
 

@@ -7,9 +7,12 @@ from app.extraction.base import LeadExtractor
 from app.models.extracted_lead import (
     Budget,
     ExtractedLead,
+    FlatmateIntent,
     LeadIntent,
+    LeadType,
     Location,
     PropertyType,
+    TransactionType,
 )
 from app.models.raw_lead import RawLead
 
@@ -19,28 +22,65 @@ PHONE_PATTERN = re.compile(r"(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}
 BEDROOM_PATTERN = re.compile(r"\b(\d+)\s*(?:bhk|bed|bedroom|bedrooms|br)\b", re.IGNORECASE)
 BATHROOM_PATTERN = re.compile(r"\b(\d+(?:\.\d+)?)\s*(?:bath|bathroom|bathrooms|ba)\b", re.IGNORECASE)
 BUDGET_RANGE_PATTERN = re.compile(
-    r"(?:budget|price|between)\s*[:\$]?\s*(\d+(?:,\d+)*(?:\.\d+)?k?)\s*(?:-|to)\s*\$?(\d+(?:,\d+)*(?:\.\d+)?k?)",
+    r"(?:budget|price|between)\s*[:\$₹]?\s*(\d+(?:,\d+)*(?:\.\d+)?\s*(?:k|l|lakh|lac|cr|crore)?)\s*(?:-|to)\s*[\$₹]?(\d+(?:,\d+)*(?:\.\d+)?\s*(?:k|l|lakh|lac|cr|crore)?)",
     re.IGNORECASE,
 )
 BUDGET_SINGLE_PATTERN = re.compile(
-    r"(?:\$|budget\s*(?:of|is|:)?\s*\$?)\s*(\d+(?:,\d+)*(?:\.\d+)?)\s*(k|thousand)?(?:\s*(?:/mo|per month|monthly|\/month))?",
+    r"(?:[\$₹]|(?:budget|rent|price)\s*(?:of|is|:)?\s*[\$₹]?\s*)(\d+(?:,\d+)*(?:\.\d+)?)\s*(k|thousand|l|lakh|lac|cr|crore)?(?:\s*(?:/mo|per month|monthly|\/month))?"
+    r"|\b(\d+(?:,\d+)*(?:\.\d+)?)\s*(k|thousand|l|lakh|lac|cr|crore)\b(?:\s*(?:/mo|per month|monthly|\/month))?",
     re.IGNORECASE,
 )
 
 
-def _parse_number_with_k(val_str: str) -> float:
-    """Parse number strings like '350k' or '2,500' into a float."""
+def _parse_real_estate_number(val_str: str) -> float:
+    """Parse number strings like '350k', '25k', '80L', or '2,500' into a float."""
     cleaned = val_str.replace(",", "").strip().lower()
-    if cleaned.endswith("k"):
-        return float(cleaned[:-1]) * 1000
+    if cleaned.endswith("k") or cleaned.endswith("thousand"):
+        num_part = re.sub(r"[^\d.]", "", cleaned)
+        return float(num_part) * 1_000
+    if cleaned.endswith("l") or cleaned.endswith("lakh") or cleaned.endswith("lac"):
+        num_part = re.sub(r"[^\d.]", "", cleaned)
+        return float(num_part) * 100_000
+    if cleaned.endswith("cr") or cleaned.endswith("crore"):
+        num_part = re.sub(r"[^\d.]", "", cleaned)
+        return float(num_part) * 10_000_000
     return float(cleaned)
 
 
 class RuleBasedExtractor(LeadExtractor):
     """Extracts structured real estate parameters using regex patterns and domain heuristics."""
 
+    def extract_lead_type(self, text: str) -> LeadType:
+        """Infer lead category: customer, property, or flatmate."""
+        lower = text.lower()
+        if any(term in lower for term in ["flatmate", "roommate", "room available", "looking for flatmate", "need flatmate"]):
+            return LeadType.FLATMATE
+        if any(term in lower for term in ["looking for", "need a", "want to buy", "looking to buy", "budget", "need 2bhk", "required", "seeking"]):
+            return LeadType.CUSTOMER
+        if any(term in lower for term in ["for rent", "for sale", "available for rent", "furnished apartment in", "ready to move", "selling"]):
+            return LeadType.PROPERTY
+        return LeadType.UNKNOWN
+
+    def extract_transaction_type(self, text: str) -> TransactionType:
+        """Infer transaction type: rent vs buy/sale."""
+        lower = text.lower()
+        if any(term in lower for term in ["for rent", "renting", "to rent", "rent", "lease", "/mo", "per month", "tenant"]):
+            return TransactionType.RENT
+        if any(term in lower for term in ["for sale", "selling", "buy", "buying", "purchase", "sale"]):
+            return TransactionType.BUY_SALE
+        return TransactionType.UNKNOWN
+
+    def extract_flatmate_intent(self, text: str) -> FlatmateIntent | None:
+        """Infer flatmate specific intent: looking_for_flatmate vs offering_room."""
+        lower = text.lower()
+        if any(term in lower for term in ["room available", "have one room", "have a room", "offering room"]):
+            return FlatmateIntent.OFFERING_ROOM
+        if any(term in lower for term in ["looking for flatmate", "looking for a flatmate", "need flatmate", "seeking flatmate"]):
+            return FlatmateIntent.LOOKING_FOR_FLATMATE
+        return None
+
     def extract_intent(self, text: str) -> LeadIntent:
-        """Infer customer intent (buy, rent, sell, lease)."""
+        """Legacy intent classification (retained for backward compatibility)."""
         lower = text.lower()
         if any(term in lower for term in ["for rent", "renting", "to rent", "lease", "/mo", "per month", "tenant"]):
             return LeadIntent.RENT
@@ -92,27 +132,32 @@ class RuleBasedExtractor(LeadExtractor):
         lower = text.lower()
         is_monthly = any(term in lower for term in ["/mo", "per month", "monthly", "rent", "lease"])
         period = "month" if is_monthly else "total"
+        currency = "INR" if any(term in lower for term in ["lakh", "lac", "cr", "crore", "₹", "rs", "inr"]) else "USD"
 
         # Check for range: "$2000 - $2500" or "budget 300k to 400k"
         range_match = BUDGET_RANGE_PATTERN.search(text)
         if range_match:
             try:
-                min_p = _parse_number_with_k(range_match.group(1))
-                max_p = _parse_number_with_k(range_match.group(2))
-                return Budget(min_price=min_p, max_price=max_p, currency="USD", period=period)
+                min_p = _parse_real_estate_number(range_match.group(1))
+                max_p = _parse_real_estate_number(range_match.group(2))
+                return Budget(min_price=min_p, max_price=max_p, currency=currency, period=period)
             except ValueError:
                 pass
 
-        # Check for single amount: "$2500" or "$350k"
+        # Check for single amount: "$2500", "25k", "80L", "23k/month"
         single_match = BUDGET_SINGLE_PATTERN.search(text)
         if single_match:
             try:
-                raw_num = single_match.group(1)
-                is_k = bool(single_match.group(2))
-                amount = float(raw_num.replace(",", ""))
-                if is_k:
-                    amount *= 1000
-                return Budget(min_price=None, max_price=amount, currency="USD", period=period)
+                raw_num = single_match.group(1) or single_match.group(3)
+                suffix = single_match.group(2) or single_match.group(4) or ""
+                if suffix.lower() in ("l", "lakh", "lac", "cr", "crore") or any(
+                    term in lower for term in ["lakh", "lac", "cr", "crore", "₹", "rs", "inr"]
+                ):
+                    currency = "INR"
+
+                amount_str = f"{raw_num}{suffix}"
+                amount = _parse_real_estate_number(amount_str)
+                return Budget(min_price=None, max_price=amount, currency=currency, period=period)
             except ValueError:
                 pass
 
@@ -129,6 +174,9 @@ class RuleBasedExtractor(LeadExtractor):
     def extract(self, raw_lead: RawLead) -> ExtractedLead:
         """Extract all structured fields from a RawLead instance."""
         text = raw_lead.raw_text
+        lead_type = self.extract_lead_type(text)
+        transaction_type = self.extract_transaction_type(text)
+        flatmate_intent = self.extract_flatmate_intent(text)
         intent = self.extract_intent(text)
         property_type = self.extract_property_type(text)
         bedrooms = self.extract_bedrooms(text)
@@ -139,10 +187,10 @@ class RuleBasedExtractor(LeadExtractor):
         # Compute confidence score based on how many attributes were extracted
         extracted_fields_count = sum(
             [
-                intent != LeadIntent.UNKNOWN,
+                lead_type != LeadType.UNKNOWN,
+                transaction_type != TransactionType.UNKNOWN,
                 property_type != PropertyType.UNKNOWN,
                 bedrooms is not None,
-                bathrooms is not None,
                 budget is not None,
                 email is not None or phone is not None,
             ]
@@ -151,12 +199,15 @@ class RuleBasedExtractor(LeadExtractor):
 
         return ExtractedLead(
             lead_id=raw_lead.lead_id,
+            lead_type=lead_type,
+            transaction_type=transaction_type,
+            flatmate_intent=flatmate_intent,
             intent=intent,
             property_type=property_type,
             bedrooms=bedrooms,
             bathrooms=bathrooms,
             budget=budget,
-            location=None,  # Rule-based location parsing will be enhanced in future stages
+            location=None,
             contact_email=email,
             contact_phone=phone,
             confidence_score=confidence,

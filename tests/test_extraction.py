@@ -87,6 +87,72 @@ class TestExtraction(unittest.TestCase):
         extracted = self.extractor.extract(raw_lead)
         self.assertEqual(extracted.property_type, PropertyType.COMMERCIAL)
 
+    def test_extract_customer_rent_lead(self) -> None:
+        """Verify Customer rent lead: 'Looking for 2BHK in Satellite, budget 25k, rent.'"""
+        raw_lead = RawLead(
+            lead_id="lead-cust-rent-1",
+            source=LeadSource.MANUAL,
+            raw_text="Looking for 2BHK in Satellite, budget 25k, rent.",
+            collected_at=datetime.now(timezone.utc),
+        )
+        extracted = self.extractor.extract(raw_lead)
+        self.assertEqual(extracted.lead_type.value, "customer")
+        self.assertEqual(extracted.transaction_type.value, "rent")
+        self.assertEqual(extracted.bedrooms, 2)
+        self.assertIsNotNone(extracted.budget)
+        assert extracted.budget is not None
+        self.assertEqual(extracted.budget.max_price, 25000.0)
+
+    def test_extract_property_rent_lead(self) -> None:
+        """Verify Property rent lead: '2BHK furnished apartment in Prahlad Nagar, 23k/month.'"""
+        raw_lead = RawLead(
+            lead_id="lead-prop-rent-1",
+            source=LeadSource.MANUAL,
+            raw_text="2BHK furnished apartment in Prahlad Nagar, 23k/month.",
+            collected_at=datetime.now(timezone.utc),
+        )
+        extracted = self.extractor.extract(raw_lead)
+        self.assertEqual(extracted.lead_type.value, "property")
+        self.assertEqual(extracted.transaction_type.value, "rent")
+        self.assertEqual(extracted.property_type.value, "apartment")
+        self.assertEqual(extracted.bedrooms, 2)
+        self.assertIsNotNone(extracted.budget)
+        assert extracted.budget is not None
+        self.assertEqual(extracted.budget.max_price, 23000.0)
+
+    def test_extract_flatmate_offering_room_lead(self) -> None:
+        """Verify Flatmate lead: 'Have one room available in a 2BHK, looking for a flatmate.'"""
+        raw_lead = RawLead(
+            lead_id="lead-flatmate-1",
+            source=LeadSource.TELEGRAM,
+            raw_text="Have one room available in a 2BHK, looking for a flatmate.",
+            collected_at=datetime.now(timezone.utc),
+        )
+        extracted = self.extractor.extract(raw_lead)
+        self.assertEqual(extracted.lead_type.value, "flatmate")
+        self.assertIsNotNone(extracted.flatmate_intent)
+        assert extracted.flatmate_intent is not None
+        self.assertEqual(extracted.flatmate_intent.value, "offering_room")
+        self.assertEqual(extracted.property_type.value, "apartment")
+        self.assertEqual(extracted.bedrooms, 2)
+
+    def test_extract_customer_buy_lead_in_lakhs(self) -> None:
+        """Verify Customer buy lead: 'Looking to buy 3BHK in Bopal, budget 80L.'"""
+        raw_lead = RawLead(
+            lead_id="lead-cust-buy-1",
+            source=LeadSource.MANUAL,
+            raw_text="Looking to buy 3BHK in Bopal, budget 80L.",
+            collected_at=datetime.now(timezone.utc),
+        )
+        extracted = self.extractor.extract(raw_lead)
+        self.assertEqual(extracted.lead_type.value, "customer")
+        self.assertEqual(extracted.transaction_type.value, "buy/sale")
+        self.assertEqual(extracted.bedrooms, 3)
+        self.assertIsNotNone(extracted.budget)
+        assert extracted.budget is not None
+        self.assertEqual(extracted.budget.max_price, 8000000.0)  # 80 Lakhs = 8,000,000
+        self.assertEqual(extracted.budget.currency, "INR")
+
 
 if __name__ == "__main__":
     unittest.main()
