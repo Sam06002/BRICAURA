@@ -12,4 +12,3 @@ class LeadExtractor(ABC):
     @abstractmethod
     def extract(self, raw_lead: RawLead) -> ExtractedLead:
         """Process a RawLead and return an ExtractedLead with structured attributes."""
-        pass

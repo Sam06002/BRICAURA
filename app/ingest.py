@@ -109,7 +109,7 @@ def run_ingest(
         ingest_lead(lead, storage)
 
         print(
-            f"SUCCESS: Ingested lead '{lead.lead_id}' (Source: {lead.source.value}, Status: {lead.status.value}) successfully."
+            f"SUCCESS: Ingested lead '{lead.lead_id}' (Source: {lead.source}, Status: {lead.status}) successfully."
         )
         return 0
 
@@ -119,7 +119,7 @@ def run_ingest(
     except StorageError as exc:
         print(f"Storage Error: {exc}", file=sys.stderr)
         return 1
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"Unexpected Error: {exc}", file=sys.stderr)
         return 1
 
@@ -131,10 +131,15 @@ def main(args: Sequence[str] | None = None) -> int:
     if parsed.interactive or not parsed.raw_text:
         if sys.stdin.isatty() or parsed.interactive:
             prompt_data = prompt_for_lead_data()
-            return run_ingest(**prompt_data)
-        else:
-            print("Error: --raw-text is required when running non-interactively.", file=sys.stderr)
-            return 1
+            return run_ingest(
+                raw_text=prompt_data["raw_text"] or "",
+                source=prompt_data["source"] or LeadSource.MANUAL.value,
+                source_url=prompt_data["source_url"],
+                author=prompt_data["author"],
+                notes=prompt_data["notes"] or "",
+            )
+        print("Error: --raw-text is required when running non-interactively.", file=sys.stderr)
+        return 1
 
     return run_ingest(
         raw_text=parsed.raw_text,

@@ -5,15 +5,14 @@ from datetime import datetime, timezone
 
 from app.extraction.base import LeadExtractor
 from app.models.extracted_lead import (
-    Budget,
-    ExtractedLead,
-    FlatmateIntent,
-    LeadIntent,
-    LeadType,
-    Location,
-    PropertyType,
-    TransactionType,
-)
+     Budget,
+     ExtractedLead,
+     FlatmateIntent,
+     LeadIntent,
+     LeadType,
+     PropertyType,
+     TransactionType,
+ )
 from app.models.raw_lead import RawLead
 
 # Regular expression patterns
@@ -35,13 +34,13 @@ BUDGET_SINGLE_PATTERN = re.compile(
 def _parse_real_estate_number(val_str: str) -> float:
     """Parse number strings like '350k', '25k', '80L', or '2,500' into a float."""
     cleaned = val_str.replace(",", "").strip().lower()
-    if cleaned.endswith("k") or cleaned.endswith("thousand"):
+    if cleaned.endswith(("k", "thousand")):
         num_part = re.sub(r"[^\d.]", "", cleaned)
         return float(num_part) * 1_000
-    if cleaned.endswith("l") or cleaned.endswith("lakh") or cleaned.endswith("lac"):
+    if cleaned.endswith(("l", "lakh", "lac")):
         num_part = re.sub(r"[^\d.]", "", cleaned)
         return float(num_part) * 100_000
-    if cleaned.endswith("cr") or cleaned.endswith("crore"):
+    if cleaned.endswith(("cr", "crore")):
         num_part = re.sub(r"[^\d.]", "", cleaned)
         return float(num_part) * 10_000_000
     return float(cleaned)

@@ -13,15 +13,15 @@ from app.models.extracted_lead import (
 from app.models.raw_lead import LeadSource, LeadStatus, RawLead
 
 __all__ = [
-    "LeadSource",
-    "LeadStatus",
-    "RawLead",
-    "LeadType",
-    "TransactionType",
+    "Budget",
+    "ExtractedLead",
     "FlatmateIntent",
     "LeadIntent",
-    "PropertyType",
-    "Budget",
+    "LeadSource",
+    "LeadStatus",
+    "LeadType",
     "Location",
-    "ExtractedLead",
+    "PropertyType",
+    "RawLead",
+    "TransactionType",
 ]

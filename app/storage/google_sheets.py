@@ -117,7 +117,7 @@ class GoogleSheetsStorage(RawLeadStorage):
         try:
             try:
                 worksheet = spreadsheet.worksheet(self.worksheet_name)
-            except (WorksheetNotFound, Exception):
+            except Exception:  # noqa: BLE001
                 logger.info("Worksheet '%s' not found. Creating worksheet...", self.worksheet_name)
                 worksheet = spreadsheet.add_worksheet(
                     title=self.worksheet_name,
@@ -142,7 +142,7 @@ class GoogleSheetsStorage(RawLeadStorage):
     def save(self, lead: RawLead) -> None:
         """Append a RawLead to the configured Google Sheet worksheet."""
         if not isinstance(lead, RawLead):
-            raise ValueError(f"Expected RawLead instance, got {type(lead).__name__}")
+            raise ValueError(f"Expected RawLead instance, got {type(lead).__name__}")  # noqa: TRY004
 
         if self._worksheet is None:
             self.initialize()
@@ -166,7 +166,7 @@ class GoogleSheetsStorage(RawLeadStorage):
 
         for lead in leads:
             if not isinstance(lead, RawLead):
-                raise ValueError(f"Expected RawLead instance, got {type(lead).__name__}")
+                raise ValueError(f"Expected RawLead instance, got {type(lead).__name__}")  # noqa: TRY004
 
         if self._worksheet is None:
             self.initialize()

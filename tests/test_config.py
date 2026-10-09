@@ -7,7 +7,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from config.settings import (
-    Settings,
     get_settings,
     load_dotenv,
     parse_env_bool,

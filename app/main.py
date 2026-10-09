@@ -2,7 +2,6 @@
 
 import logging
 import sys
-from typing import NoReturn
 
 from config.settings import Settings, get_settings
 

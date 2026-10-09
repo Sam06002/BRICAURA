@@ -7,7 +7,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from app.bulk_ingest import run_bulk_ingest
-from app.models.raw_lead import LeadSource
 from app.services.bulk_ingest import (
     ingest_bulk_leads,
     parse_records_from_csv,

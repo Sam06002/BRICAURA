@@ -1,7 +1,7 @@
 """Storage interface and data mapping specifications for RawLead persistence."""
 
 from abc import ABC, abstractmethod
-from typing import Sequence
+from collections.abc import Sequence
 
 from app.models.raw_lead import LeadSource, LeadStatus, RawLead
 
@@ -44,19 +44,15 @@ class RawLeadStorage(ABC):
     @abstractmethod
     def initialize(self) -> None:
         """Initialize the storage target (validate connectivity and setup headers/schema)."""
-        pass
 
     @abstractmethod
     def save(self, lead: RawLead) -> None:
         """Persist a single RawLead domain instance."""
-        pass
 
     @abstractmethod
     def save_batch(self, leads: Sequence[RawLead]) -> int:
         """Persist a collection of RawLead instances in batch. Returns number of saved records."""
-        pass
 
     @abstractmethod
     def get_existing_fingerprints(self) -> set[str]:
         """Fetch pre-existing lead fingerprints from storage to prevent duplicates."""
-        pass

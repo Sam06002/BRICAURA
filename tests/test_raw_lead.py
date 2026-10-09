@@ -87,54 +87,50 @@ class TestRawLead(unittest.TestCase):
         """Verify that missing, empty, or whitespace-only lead_id raises ValueError."""
         invalid_lead_ids = ["", "   ", None, 12345]
         for invalid_id in invalid_lead_ids:
-            with self.subTest(lead_id=invalid_id):
-                with self.assertRaises(ValueError):
-                    RawLead(
-                        lead_id=invalid_id,  # type: ignore[arg-type]
-                        source=LeadSource.MANUAL,
-                        raw_text="Valid content",
-                        collected_at=self.valid_collected_at,
-                    )
+            with self.subTest(lead_id=invalid_id), self.assertRaises(ValueError):
+                RawLead(
+                    lead_id=invalid_id,  # type: ignore[arg-type]
+                    source=LeadSource.MANUAL,
+                    raw_text="Valid content",
+                    collected_at=self.valid_collected_at,
+                )
 
     def test_invalid_source(self) -> None:
         """Verify that unsupported or invalid source types raise ValueError."""
         invalid_sources = ["twitter", "linkedin", "tiktok", "", 123, None]
         for invalid_source in invalid_sources:
-            with self.subTest(source=invalid_source):
-                with self.assertRaises(ValueError):
-                    RawLead(
-                        lead_id=self.valid_lead_id,
-                        source=invalid_source,  # type: ignore[arg-type]
-                        raw_text="Valid content",
-                        collected_at=self.valid_collected_at,
-                    )
+            with self.subTest(source=invalid_source), self.assertRaises(ValueError):
+                RawLead(
+                    lead_id=self.valid_lead_id,
+                    source=invalid_source,  # type: ignore[arg-type]
+                    raw_text="Valid content",
+                    collected_at=self.valid_collected_at,
+                )
 
     def test_invalid_status(self) -> None:
         """Verify that unsupported or invalid status values raise ValueError."""
         invalid_statuses = ["pending", "archived", "deleted", "", 42]
         for invalid_status in invalid_statuses:
-            with self.subTest(status=invalid_status):
-                with self.assertRaises(ValueError):
-                    RawLead(
-                        lead_id=self.valid_lead_id,
-                        source=LeadSource.MANUAL,
-                        raw_text="Valid content",
-                        collected_at=self.valid_collected_at,
-                        status=invalid_status,  # type: ignore[arg-type]
-                    )
+            with self.subTest(status=invalid_status), self.assertRaises(ValueError):
+                RawLead(
+                    lead_id=self.valid_lead_id,
+                    source=LeadSource.MANUAL,
+                    raw_text="Valid content",
+                    collected_at=self.valid_collected_at,
+                    status=invalid_status,  # type: ignore[arg-type]
+                )
 
     def test_empty_or_whitespace_raw_text(self) -> None:
         """Verify that empty or whitespace-only raw_text raises ValueError."""
         invalid_raw_texts = ["", "   ", "\t\n  ", None, 100]
         for invalid_text in invalid_raw_texts:
-            with self.subTest(raw_text=invalid_text):
-                with self.assertRaises(ValueError):
-                    RawLead(
-                        lead_id=self.valid_lead_id,
-                        source=LeadSource.MANUAL,
-                        raw_text=invalid_text,  # type: ignore[arg-type]
-                        collected_at=self.valid_collected_at,
-                    )
+            with self.subTest(raw_text=invalid_text), self.assertRaises(ValueError):
+                RawLead(
+                    lead_id=self.valid_lead_id,
+                    source=LeadSource.MANUAL,
+                    raw_text=invalid_text,  # type: ignore[arg-type]
+                    collected_at=self.valid_collected_at,
+                )
 
     def test_raw_text_immutability_and_preservation(self) -> None:
         """Verify raw_text is never trimmed, modified, or classified."""
@@ -159,15 +155,14 @@ class TestRawLead(unittest.TestCase):
             12345,
         ]
         for invalid_url in invalid_urls:
-            with self.subTest(source_url=invalid_url):
-                with self.assertRaises(ValueError):
-                    RawLead(
-                        lead_id=self.valid_lead_id,
-                        source=LeadSource.REDDIT,
-                        source_url=invalid_url,  # type: ignore[arg-type]
-                        raw_text="Valid text",
-                        collected_at=self.valid_collected_at,
-                    )
+            with self.subTest(source_url=invalid_url), self.assertRaises(ValueError):
+                RawLead(
+                    lead_id=self.valid_lead_id,
+                    source=LeadSource.REDDIT,
+                    source_url=invalid_url,  # type: ignore[arg-type]
+                    raw_text="Valid text",
+                    collected_at=self.valid_collected_at,
+                )
 
     def test_valid_source_urls(self) -> None:
         """Verify valid HTTP and HTTPS URLs are accepted."""
@@ -193,14 +188,13 @@ class TestRawLead(unittest.TestCase):
         """Verify that invalid collected_at type raises ValueError."""
         invalid_timestamps = ["2026-10-08T18:00:00Z", 1700000000, None]
         for invalid_ts in invalid_timestamps:
-            with self.subTest(collected_at=invalid_ts):
-                with self.assertRaises(ValueError):
-                    RawLead(
-                        lead_id=self.valid_lead_id,
-                        source=LeadSource.MANUAL,
-                        raw_text="Valid text",
-                        collected_at=invalid_ts,  # type: ignore[arg-type]
-                    )
+            with self.subTest(collected_at=invalid_ts), self.assertRaises(ValueError):
+                RawLead(
+                    lead_id=self.valid_lead_id,
+                    source=LeadSource.MANUAL,
+                    raw_text="Valid text",
+                    collected_at=invalid_ts,  # type: ignore[arg-type]
+                )
 
     def test_invalid_author_type(self) -> None:
         """Verify that non-string non-None author raises ValueError."""

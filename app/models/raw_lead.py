@@ -1,10 +1,9 @@
 """Domain models for lead aggregation and ingestion."""
 
 import urllib.parse
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
-from typing import Any
 
 
 class LeadSource(StrEnum):
@@ -29,7 +28,7 @@ def _is_valid_url(url: str) -> bool:
     try:
         parsed = urllib.parse.urlparse(url)
         return parsed.scheme in ("http", "https") and bool(parsed.netloc)
-    except Exception:
+    except (ValueError, AttributeError):
         return False
 
 
@@ -65,7 +64,7 @@ class RawLead:
                     f"Invalid source '{self.source}'. Allowed sources: {[s.value for s in LeadSource]}."
                 )
         elif not isinstance(self.source, LeadSource):
-            raise ValueError(
+            raise ValueError(  # noqa: TRY004
                 f"Invalid source type. Expected LeadSource or str, got {type(self.source).__name__}."
             )
 
@@ -75,7 +74,7 @@ class RawLead:
 
         # 4. Validate collected_at timestamp
         if not isinstance(self.collected_at, datetime):
-            raise ValueError("collected_at must be an instance of datetime.")
+            raise ValueError("collected_at must be an instance of datetime.")  # noqa: TRY004
 
         # 5. Validate source_url if provided
         if self.source_url is not None:
@@ -97,7 +96,7 @@ class RawLead:
                     f"Invalid status '{self.status}'. Allowed statuses: {[s.value for s in LeadStatus]}."
                 )
         elif not isinstance(self.status, LeadStatus):
-            raise ValueError(
+            raise ValueError(  # noqa: TRY004
                 f"Invalid status type. Expected LeadStatus or str, got {type(self.status).__name__}."
             )
 

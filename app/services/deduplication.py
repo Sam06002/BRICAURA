@@ -2,9 +2,9 @@
 
 import hashlib
 import re
-from typing import Sequence
+from collections.abc import Sequence
 
-from app.models.raw_lead import RawLead
+from app.models.raw_lead import LeadSource, RawLead
 
 
 def normalize_text_for_fingerprint(text: str) -> str:
@@ -22,7 +22,7 @@ def compute_lead_fingerprint(source: str, source_url: str | None, raw_text: str)
     normalized_url = source_url.strip().lower() if source_url else ""
     normalized_text = normalize_text_for_fingerprint(raw_text)
 
-    payload = f"{normalized_source}|{normalized_url}|{normalized_text}".encode("utf-8")
+    payload = f"{normalized_source}|{normalized_url}|{normalized_text}".encode()
     return hashlib.sha256(payload).hexdigest()
 
 
@@ -34,13 +34,13 @@ class DeduplicationFilter:
 
     def is_duplicate(self, lead: RawLead) -> bool:
         """Check whether a lead's fingerprint has already been recorded."""
-        source_val = lead.source.value if hasattr(lead.source, "value") else str(lead.source)
+        source_val = lead.source.value if isinstance(lead.source, LeadSource) else str(lead.source)
         fingerprint = compute_lead_fingerprint(source_val, lead.source_url, lead.raw_text)
         return fingerprint in self.seen_fingerprints
 
     def register(self, lead: RawLead) -> str:
         """Register a lead and return its computed fingerprint."""
-        source_val = lead.source.value if hasattr(lead.source, "value") else str(lead.source)
+        source_val = lead.source.value if isinstance(lead.source, LeadSource) else str(lead.source)
         fingerprint = compute_lead_fingerprint(source_val, lead.source_url, lead.raw_text)
         self.seen_fingerprints.add(fingerprint)
         return fingerprint

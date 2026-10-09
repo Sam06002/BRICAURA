@@ -2,9 +2,10 @@
 
 import csv
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from app.models.raw_lead import RawLead
 from app.services.deduplication import DeduplicationFilter
@@ -73,7 +74,7 @@ def parse_records_from_json(file_path: Path | str) -> list[dict[str, Any]]:
     if isinstance(data, dict):
         data = [data]
     elif not isinstance(data, list):
-        raise ValueError("JSON content must be an array of lead objects or a single lead object.")
+        raise ValueError("JSON content must be an array of lead objects or a single lead object.")  # noqa: TRY004
 
     records: list[dict[str, Any]] = []
     for item in data:
@@ -103,10 +104,9 @@ def load_records_from_file(file_path: Path | str) -> list[dict[str, Any]]:
     ext = path.suffix.lower()
     if ext == ".csv":
         return parse_records_from_csv(path)
-    elif ext == ".json":
+    if ext == ".json":
         return parse_records_from_json(path)
-    else:
-        raise ValueError(f"Unsupported file format '{ext}'. Supported formats: .csv, .json")
+    raise ValueError(f"Unsupported file format '{ext}'. Supported formats: .csv, .json")
 
 
 def ingest_bulk_leads(
@@ -129,7 +129,7 @@ def ingest_bulk_leads(
     if deduplicate:
         try:
             existing_fps = storage.get_existing_fingerprints()
-        except Exception:
+        except Exception:  # noqa: BLE001
             existing_fps = set()
 
     dedup_filter = DeduplicationFilter(existing_fps)
@@ -157,7 +157,7 @@ def ingest_bulk_leads(
 
             valid_leads.append(lead)
 
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             errors.append(f"Row {idx}: {exc}")
 
     inserted_count = 0

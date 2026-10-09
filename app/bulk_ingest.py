@@ -75,7 +75,7 @@ def run_bulk_ingest(
     except StorageError as exc:
         print(f"Storage Error: {exc}", file=sys.stderr)
         return 1
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 

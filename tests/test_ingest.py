@@ -5,11 +5,11 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-from app.ingest import main, parse_args, prompt_for_lead_data, run_ingest
-from app.models.raw_lead import LeadSource, LeadStatus, RawLead
+from app.ingest import main, prompt_for_lead_data, run_ingest
+from app.models.raw_lead import LeadSource, LeadStatus
 from app.services.ingestion import create_raw_lead, generate_lead_id, ingest_lead
 from app.storage.base import RawLeadStorage
-from app.storage.exceptions import StorageConfigError, StorageWriteError
+from app.storage.exceptions import StorageWriteError
 from config.settings import Settings
 
 
@@ -62,9 +62,8 @@ class TestIngestionService(unittest.TestCase):
     def test_missing_or_empty_raw_text(self) -> None:
         """Verify creating lead with empty raw text raises ValueError."""
         for empty_text in ["", "   ", "\n\t"]:
-            with self.subTest(text=empty_text):
-                with self.assertRaises(ValueError):
-                    create_raw_lead(raw_text=empty_text)
+            with self.subTest(text=empty_text), self.assertRaises(ValueError):
+                create_raw_lead(raw_text=empty_text)
 
     def test_invalid_source_raises_error(self) -> None:
         """Verify unsupported source raises ValueError."""
