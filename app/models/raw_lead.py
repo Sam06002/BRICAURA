@@ -47,7 +47,7 @@ class RawLead:
     source_url: str | None = None
     author: str | None = None
     status: LeadStatus | str = LeadStatus.NEW
-    notes: str = ""
+    notes: str | None = ""
 
     def __post_init__(self) -> None:
         """Validate all field constraints upon instantiation."""
@@ -101,7 +101,7 @@ class RawLead:
             )
 
         # 8. Validate notes
-        if self.notes is not None and not isinstance(self.notes, str):
-            raise ValueError("notes must be a string.")
         if self.notes is None:
             self.notes = ""
+        elif not isinstance(self.notes, str):
+            raise ValueError("notes must be a string.")

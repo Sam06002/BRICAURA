@@ -90,7 +90,7 @@ class ExtractedLead:
     extracted_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
-        if not self.lead_id or not str(self.lead_id).strip():
+        if not self.lead_id or not self.lead_id.strip():
             raise ValueError("lead_id must be a non-empty string referencing a RawLead.")
         if not (0.0 <= self.confidence_score <= 1.0):
             raise ValueError("confidence_score must be between 0.0 and 1.0.")
