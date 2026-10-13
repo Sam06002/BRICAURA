@@ -17,7 +17,11 @@ from app.models.raw_lead import RawLead
 
 # Regular expression patterns
 EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
-PHONE_PATTERN = re.compile(r"(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
+PHONE_PATTERN = re.compile(
+    r"(?:\+?91[-.\s]?)?[6-9]\d{4}[-.\s]?\d{5}\b"
+    r"|(?:\+?91[-.\s]?)?[6-9]\d{9}\b"
+    r"|(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"
+)
 BEDROOM_PATTERN = re.compile(r"\b(\d+)\s*(?:bhk|bed|bedroom|bedrooms|br)\b", re.IGNORECASE)
 BATHROOM_PATTERN = re.compile(r"\b(\d+(?:\.\d+)?)\s*(?:bath|bathroom|bathrooms|ba)\b", re.IGNORECASE)
 BUDGET_RANGE_PATTERN = re.compile(

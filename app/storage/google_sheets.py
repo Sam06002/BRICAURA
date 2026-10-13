@@ -17,6 +17,13 @@ from config.settings import Settings
 
 logger = logging.getLogger(__name__)
 
+REVIEWED_LEAD_HEADERS: tuple[str, ...] = (
+    "lead_id", "source", "source_url", "raw_text", "author", "collected_at", "posted_at", "notes",
+    "lead_type", "transaction_type", "flatmate_intent", "property_type", "bedrooms", "bathrooms",
+    "budget_min", "budget_max", "currency", "budget_period", "city", "neighborhood", "state",
+    "contact_phone", "contact_email", "confidence_score",
+)
+
 # Safely import gspread with fallback types if gspread is not yet installed in runtime
 try:
     import gspread  # type: ignore
@@ -37,15 +44,19 @@ class GoogleSheetsStorage(RawLeadStorage):
         service_account_file: str | Path | None = None,
         service_account_info: dict[str, Any] | str | None = None,
         client: Any = None,
+        reviewed_worksheet_name: str = "ReviewedLeads",
     ) -> None:
         """Initialize Google Sheets storage configuration and optional injected client."""
         if not spreadsheet_id or not str(spreadsheet_id).strip():
             raise StorageConfigError("GOOGLE_SHEETS_SPREADSHEET_ID is required and cannot be empty.")
         if not worksheet_name or not str(worksheet_name).strip():
             raise StorageConfigError("GOOGLE_SHEETS_WORKSHEET_NAME cannot be empty.")
+        if not reviewed_worksheet_name or not str(reviewed_worksheet_name).strip():
+            raise StorageConfigError("GOOGLE_SHEETS_REVIEWED_WORKSHEET_NAME cannot be empty.")
 
         self.spreadsheet_id = str(spreadsheet_id).strip()
         self.worksheet_name = str(worksheet_name).strip()
+        self.reviewed_worksheet_name = str(reviewed_worksheet_name).strip()
         self.service_account_file = Path(service_account_file) if service_account_file else None
         self.service_account_info = service_account_info
 
@@ -65,6 +76,7 @@ class GoogleSheetsStorage(RawLeadStorage):
             service_account_file=settings.google_service_account_file,
             service_account_info=settings.google_service_account_info,
             client=client,
+            reviewed_worksheet_name=settings.google_sheets_reviewed_worksheet_name,
         )
 
     def _get_client(self) -> Any:
@@ -213,3 +225,25 @@ class GoogleSheetsStorage(RawLeadStorage):
             raise StorageInitializationError(
                 f"Failed to retrieve existing fingerprints from Google Sheets: {exc}"
             ) from exc
+
+    def save_reviewed_batch(self, records: list[dict[str, Any]]) -> int:
+        """Append reviewed structured leads to a separate Google Sheets worksheet."""
+        if not records:
+            return 0
+        client = self._get_client()
+        reviewed_name = self.reviewed_worksheet_name
+        try:
+            spreadsheet = client.open_by_key(self.spreadsheet_id)
+            try:
+                worksheet = spreadsheet.worksheet(reviewed_name)
+            except WorksheetNotFound:
+                worksheet = spreadsheet.add_worksheet(
+                    title=reviewed_name, rows=max(1000, len(records) + 1), cols=len(REVIEWED_LEAD_HEADERS)
+                )
+            if not worksheet.row_values(1):
+                worksheet.append_row(list(REVIEWED_LEAD_HEADERS))
+            rows = [["" if item.get(key) is None else str(item.get(key, "")) for key in REVIEWED_LEAD_HEADERS] for item in records]
+            worksheet.append_rows(rows)
+            return len(rows)
+        except Exception as exc:
+            raise StorageWriteError(f"Failed to export reviewed leads to Google Sheets: {exc}") from exc

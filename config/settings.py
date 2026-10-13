@@ -16,6 +16,7 @@ class Settings:
     app_port: int = 8000
     google_sheets_spreadsheet_id: str | None = None
     google_sheets_worksheet_name: str = "RawLeads"
+    google_sheets_reviewed_worksheet_name: str = "ReviewedLeads"
     google_service_account_file: str | None = None
     google_service_account_info: str | None = None
 
@@ -66,6 +67,7 @@ def get_settings(dotenv_path: Path | str | None = ".env") -> Settings:
         app_port=parse_env_int(os.getenv("APP_PORT"), 8000),
         google_sheets_spreadsheet_id=os.getenv("GOOGLE_SHEETS_SPREADSHEET_ID"),
         google_sheets_worksheet_name=os.getenv("GOOGLE_SHEETS_WORKSHEET_NAME", "RawLeads"),
+        google_sheets_reviewed_worksheet_name=os.getenv("GOOGLE_SHEETS_REVIEWED_WORKSHEET_NAME", "ReviewedLeads"),
         google_service_account_file=os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
         or os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
         google_service_account_info=os.getenv("GOOGLE_SERVICE_ACCOUNT_INFO"),

@@ -39,6 +39,11 @@ credentials/
 !requirements*.json
 !package*.json
 !pyrightconfig.json
+!data/fixtures/*.json
+
+# Database files
+*.sqlite3
+*.db
 
 # Unit test / coverage reporting
 .coverage
