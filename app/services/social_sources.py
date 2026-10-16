@@ -30,11 +30,33 @@ def _city_terms(city: str) -> tuple[str, ...]:
     )
 
 
-def is_relevant_post(text: str, city: str) -> bool:
+def is_relevant_post(text: str, city: str, context: str = "") -> bool:
     lowered = text.lower()
-    return any(term in lowered for term in _city_terms(city)) and any(
+    combined = f"{context} {text}".lower() if context else lowered
+    return any(term in combined for term in _city_terms(city)) and any(
         term in lowered for term in PROPERTY_TERMS
     )
+
+
+def parse_subreddits(val: str | None) -> list[str]:
+    """Parse comma-separated subreddit names, stripping optional 'r/' or '/r/' prefixes."""
+    if not val:
+        return []
+    result: list[str] = []
+    seen: set[str] = set()
+    for item in val.split(","):
+        cleaned = item.strip()
+        if not cleaned:
+            continue
+        if cleaned.lower().startswith("/r/"):
+            cleaned = cleaned[3:]
+        elif cleaned.lower().startswith("r/"):
+            cleaned = cleaned[2:]
+        cleaned = cleaned.strip().lower()
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            result.append(cleaned)
+    return result
 
 
 def _http_json(url: str, *, headers: dict[str, str], data: bytes | None = None) -> dict[str, Any]:
@@ -80,29 +102,87 @@ def _reddit_access_token() -> str:
     return str(token)
 
 
-def collect_reddit(city: str) -> list[dict[str, Any]]:
-    """Search Reddit through OAuth using the application's configured credentials."""
+def collect_reddit(city: str, errors: list[dict[str, str]] | None = None) -> list[dict[str, Any]]:
+    """Search Reddit through OAuth using configured subreddits or global search fallback."""
     user_agent = os.getenv("REDDIT_USER_AGENT", "BRICAURA/0.1 local lead review tool")
     token = _reddit_access_token()
+    headers = {"Authorization": f"Bearer {token}", "User-Agent": user_agent}
 
     found: dict[str, dict[str, Any]] = {}
-    for query in _search_queries(city):
-        params = urllib.parse.urlencode({"q": query, "sort": "new", "t": "month", "limit": 100})
-        payload = _http_json(
-            f"https://oauth.reddit.com/search?{params}",
-            headers={"Authorization": f"Bearer {token}", "User-Agent": user_agent},
-        )
-        for child in payload.get("data", {}).get("children", []):
-            post = child.get("data", {})
-            key = str(post.get("id", ""))
-            title, body = str(post.get("title", "")), str(post.get("selftext", ""))
-            if key and is_relevant_post(f"{title} {body}", city):
+    subreddits = parse_subreddits(os.getenv("REDDIT_SUBREDDITS"))
+
+    if subreddits:
+        collection_mode = "subreddit"
+        sub_errors: list[str] = []
+        for sub in subreddits:
+            try:
+                params = urllib.parse.urlencode({"limit": 100})
+                url = f"https://oauth.reddit.com/r/{urllib.parse.quote(sub)}/new?{params}"
+                payload = _http_json(url, headers=headers)
+                for child in payload.get("data", {}).get("children", []):
+                    post = child.get("data", {})
+                    key = str(post.get("id", "")).strip()
+                    if not key or key in found:
+                        continue
+                    title = str(post.get("title", "")).strip()
+                    body = str(post.get("selftext", "")).strip()
+                    raw_text = "\n\n".join(part for part in (title, body) if part)
+                    sub_name = str(post.get("subreddit", "")).strip() or sub
+                    if not raw_text or not is_relevant_post(raw_text, city, context=sub_name):
+                        continue
+                    author = post.get("author")
+                    if author in (None, "", "[deleted]", "[removed]"):
+                        author = None
+                    permalink = post.get("permalink")
+                    source_url = f"https://www.reddit.com{permalink}" if permalink else None
+                    found[key] = {
+                        "raw_text": raw_text,
+                        "source_url": source_url,
+                        "author": author,
+                        "posted_at": post.get("created_utc"),
+                        "source_post_id": key,
+                        "subreddit": sub_name,
+                        "collection_mode": collection_mode,
+                    }
+            except Exception as exc:
+                err_msg = f"Failed to collect from subreddit 'r/{sub}': {exc}"
+                sub_errors.append(err_msg)
+                if errors is not None:
+                    errors.append({"source": "reddit", "city": city, "message": err_msg})
+        if not found and sub_errors and errors is None:
+            raise SourceUnavailable("; ".join(sub_errors))
+    else:
+        collection_mode = "global_search"
+        for query in _search_queries(city):
+            params = urllib.parse.urlencode({"q": query, "sort": "new", "t": "month", "limit": 100})
+            payload = _http_json(
+                f"https://oauth.reddit.com/search?{params}",
+                headers=headers,
+            )
+            for child in payload.get("data", {}).get("children", []):
+                post = child.get("data", {})
+                key = str(post.get("id", "")).strip()
+                if not key or key in found:
+                    continue
+                title = str(post.get("title", "")).strip()
+                body = str(post.get("selftext", "")).strip()
+                raw_text = "\n\n".join(part for part in (title, body) if part)
+                sub_name = str(post.get("subreddit", "")).strip()
+                if not raw_text or not is_relevant_post(raw_text, city, context=sub_name):
+                    continue
+                author = post.get("author")
+                if author in (None, "", "[deleted]", "[removed]"):
+                    author = None
+                permalink = post.get("permalink")
+                source_url = f"https://www.reddit.com{permalink}" if permalink else None
                 found[key] = {
-                    "raw_text": "\n\n".join(part for part in (title, body) if part),
-                    "source_url": "https://www.reddit.com" + str(post.get("permalink", "")),
-                    "author": post.get("author"),
+                    "raw_text": raw_text,
+                    "source_url": source_url,
+                    "author": author,
                     "posted_at": post.get("created_utc"),
                     "source_post_id": key,
+                    "subreddit": sub_name,
+                    "collection_mode": collection_mode,
                 }
     return list(found.values())
 
@@ -196,12 +276,21 @@ def check_connection(source: str) -> str:
     if source == "reddit":
         token = _reddit_access_token()
         user_agent = os.getenv("REDDIT_USER_AGENT", "BRICAURA/0.1 local lead review tool")
+        subreddits = parse_subreddits(os.getenv("REDDIT_SUBREDDITS"))
+        if subreddits:
+            sub = subreddits[0]
+            _http_json(
+                f"https://oauth.reddit.com/r/{urllib.parse.quote(sub)}/new?limit=1",
+                headers={"Authorization": f"Bearer {token}", "User-Agent": user_agent},
+            )
+            sub_list = ", ".join(f"r/{s}" for s in subreddits)
+            return f"Reddit OAuth access succeeded (mode: subreddits [{sub_list}])."
         query = urllib.parse.urlencode({"q": "Ahmedabad", "sort": "new", "limit": 1})
         _http_json(
             f"https://oauth.reddit.com/search?{query}",
             headers={"Authorization": f"Bearer {token}", "User-Agent": user_agent},
         )
-        return "Reddit OAuth and read access succeeded."
+        return "Reddit OAuth access succeeded (mode: global_search fallback)."
     if source == "facebook":
         rows = collect_facebook("Ahmedabad")
         return f"Meta Graph API access succeeded; fetched {len(rows)} recent Page post(s)."
@@ -241,8 +330,25 @@ def source_readiness() -> dict[str, dict[str, Any]]:
     reddit_ready = bool(os.getenv("REDDIT_CLIENT_ID") and os.getenv("REDDIT_CLIENT_SECRET"))
     telegram_ready = bool(os.getenv("TELEGRAM_API_ID") and os.getenv("TELEGRAM_API_HASH") and os.getenv("TELEGRAM_GROUPS"))
     facebook_ready = bool(os.getenv("META_ACCESS_TOKEN") and os.getenv("FACEBOOK_PAGE_IDS"))
+
+    if reddit_ready:
+        subs = parse_subreddits(os.getenv("REDDIT_SUBREDDITS"))
+        if subs:
+            reddit_msg = f"Ready (monitoring: {', '.join(f'r/{s}' for s in subs)})"
+            reddit_mode = "subreddit"
+        else:
+            reddit_msg = "Ready (mode: global_search fallback)"
+            reddit_mode = "global_search"
+    else:
+        reddit_msg = "Add Reddit API credentials in .env"
+        reddit_mode = "unconfigured"
+
     return {
-        "reddit": {"ready": reddit_ready, "message": "Ready" if reddit_ready else "Add Reddit API credentials in .env"},
+        "reddit": {
+            "ready": reddit_ready,
+            "message": reddit_msg,
+            "mode": reddit_mode,
+        },
         "facebook": {
             "ready": facebook_ready,
             "message": "Facebook Pages configured; Groups API is unavailable" if facebook_ready else "Groups API was removed; Pages need an authorized token and Page IDs",
@@ -254,8 +360,11 @@ def source_readiness() -> dict[str, dict[str, Any]]:
     }
 
 
-def collect_from_source(source: str, city: str) -> list[dict[str, Any]]:
-    adapters = {"reddit": collect_reddit, "facebook": collect_facebook, "telegram": collect_telegram}
-    if source not in adapters:
-        raise SourceUnavailable(f"Unknown source: {source}")
-    return adapters[source](city)
+def collect_from_source(source: str, city: str, errors: list[dict[str, str]] | None = None) -> list[dict[str, Any]]:
+    if source == "reddit":
+        return collect_reddit(city, errors=errors)
+    if source == "facebook":
+        return collect_facebook(city)
+    if source == "telegram":
+        return collect_telegram(city)
+    raise SourceUnavailable(f"Unknown source: {source}")

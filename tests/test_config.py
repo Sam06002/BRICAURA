@@ -30,6 +30,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(settings.google_sheets_worksheet_name, "RawLeads")
             self.assertIsNone(settings.google_service_account_file)
             self.assertIsNone(settings.google_service_account_info)
+            self.assertIsNone(settings.reddit_subreddits)
 
     def test_custom_environment_variables(self) -> None:
         """Verify settings populate accurately from custom environment variables."""
@@ -42,6 +43,7 @@ class TestConfig(unittest.TestCase):
             "GOOGLE_SHEETS_SPREADSHEET_ID": "sheet-xyz-99",
             "GOOGLE_SHEETS_WORKSHEET_NAME": "IngestedRaw",
             "GOOGLE_SERVICE_ACCOUNT_FILE": "/secrets/google.json",
+            "REDDIT_SUBREDDITS": "ahmedabad, gandhinagar",
         }
         with patch.dict(os.environ, custom_env, clear=True):
             settings = get_settings(dotenv_path=None)
@@ -53,6 +55,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(settings.google_sheets_spreadsheet_id, "sheet-xyz-99")
             self.assertEqual(settings.google_sheets_worksheet_name, "IngestedRaw")
             self.assertEqual(settings.google_service_account_file, "/secrets/google.json")
+            self.assertEqual(settings.reddit_subreddits, "ahmedabad, gandhinagar")
 
     def test_parse_env_bool(self) -> None:
         """Verify boolean parsing logic."""

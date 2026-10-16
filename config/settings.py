@@ -19,6 +19,7 @@ class Settings:
     google_sheets_reviewed_worksheet_name: str = "ReviewedLeads"
     google_service_account_file: str | None = None
     google_service_account_info: str | None = None
+    reddit_subreddits: str | None = None
 
 
 def parse_env_bool(value: str | None, default: bool = False) -> bool:
@@ -71,4 +72,5 @@ def get_settings(dotenv_path: Path | str | None = ".env") -> Settings:
         google_service_account_file=os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
         or os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
         google_service_account_info=os.getenv("GOOGLE_SERVICE_ACCOUNT_INFO"),
+        reddit_subreddits=os.getenv("REDDIT_SUBREDDITS"),
     )

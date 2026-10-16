@@ -128,6 +128,9 @@ def _serialize_extracted(raw: Any, city: str, post: dict[str, Any]) -> dict[str,
         "notes": raw.notes,
         "collected_at": raw.collected_at.isoformat(),
         "posted_at": post.get("posted_at"),
+        "source_post_id": post.get("source_post_id") or "",
+        "subreddit": post.get("subreddit") or "",
+        "collection_mode": post.get("collection_mode") or "",
         "lead_type": extracted.lead_type.value,
         "transaction_type": extracted.transaction_type.value,
         "flatmate_intent": extracted.flatmate_intent.value if extracted.flatmate_intent else "",
@@ -157,10 +160,10 @@ def _run_collection(run_id: str, sources: list[str], cities: list[str]) -> None:
     for source in sources:
         for city in cities:
             try:
-                posts = collect_from_source(source, city)
+                posts = collect_from_source(source, city, errors=errors)
                 for post in posts:
                     try:
-                        if not is_relevant_post(post.get("raw_text", ""), city):
+                        if not is_relevant_post(post.get("raw_text", ""), city, context=post.get("subreddit", "")):
                             continue
                         raw = create_raw_lead(
                             raw_text=post.get("raw_text", ""), source=LeadSource(source),
