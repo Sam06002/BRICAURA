@@ -1,4 +1,4 @@
-# BRICAURA 🏢✨
+# BRICAURA
 
 > **Next.js 15 & Supabase** Real Estate Property & Tenant Management Platform.
 
@@ -6,7 +6,7 @@ BRICAURA is a full-stack real estate management system built with Next.js 15 (Ap
 
 ---
 
-## ⚡ Tech Stack
+## Tech Stack
 
 - **Framework:** [Next.js 15](https://nextjs.org/) (App Router, React 19, Turbopack)
 - **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL, Row Level Security, Auth, Storage)
@@ -18,7 +18,7 @@ BRICAURA is a full-stack real estate management system built with Next.js 15 (Ap
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 BRICAURA/
@@ -26,8 +26,23 @@ BRICAURA/
 │   ├── favicon.ico
 │   ├── globals.css             # Tailwind v4 styles and color variables
 │   ├── layout.tsx              # Root layout with Geist font & SEO metadata
-│   └── page.tsx                # Architectural overview & foundation dashboard
+│   ├── page.tsx                # Architectural overview & foundation dashboard
+│   ├── (dashboard)/
+│   │   ├── layout.tsx          # Protected route shell
+│   │   ├── dashboard/page.tsx  # Overview analytics & KPI metrics
+│   │   ├── properties/page.tsx # Property listings & unit inventory
+│   │   ├── tenants/page.tsx    # Tenant CRM pipeline stages
+│   │   └── matching/page.tsx   # Automated compatibility engine
+│   ├── login/page.tsx          # Agent authentication (Sign in & Sign up)
+│   ├── actions/                # Server actions (auth, properties, tenants)
+│   └── auth/callback/route.ts  # Supabase OAuth/auth code callback
 ├── components/
+│   ├── add-property-dialog.tsx # Property creation modal
+│   ├── add-tenant-dialog.tsx   # Tenant registration modal
+│   ├── property-list.tsx       # Property search, filter & status manager
+│   ├── tenant-list.tsx         # Tenant search & pipeline filter
+│   ├── dashboard-nav.tsx       # Sidebar navigation
+│   ├── dashboard-header.tsx    # Header & user profile dropdown
 │   └── ui/                     # shadcn/ui components (button, card, dialog, input, etc.)
 ├── lib/
 │   ├── supabase/
@@ -41,6 +56,7 @@ BRICAURA/
 ├── middleware.ts               # Next.js edge middleware for auth token refresh
 ├── public/                     # Static SVG assets & images
 ├── supabase/
+│   ├── README.md               # Supabase execution guide
 │   └── schema.sql              # Complete PostgreSQL schema, RLS policies & triggers
 ├── types/
 │   └── index.ts                # TypeScript interfaces (Property, Tenant, UserProfile, Database)
@@ -54,7 +70,7 @@ BRICAURA/
 
 ---
 
-## 🗄️ Database Schema & RLS
+## Database Schema & RLS
 
 All tables and policies are defined in [`supabase/schema.sql`](supabase/schema.sql).
 
@@ -112,7 +128,7 @@ Every table has strict RLS policies enabled:
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Prerequisites
 - Node.js 20+ installed
@@ -155,7 +171,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🛠️ Available Scripts
+## Available Scripts
 
 - `npm run dev` — Starts the Next.js development server with Turbopack
 - `npm run build` — Compiles the production build
@@ -165,5 +181,5 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📝 License
+## License
 Private & Proprietary. Created for real estate asset and lead operations.
