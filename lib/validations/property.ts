@@ -23,6 +23,15 @@ export const propertyStatusSchema = z.enum([
   'Under Discussion',
 ]);
 
+export const photoSourceTypeSchema = z.enum([
+  'Facebook',
+  'WhatsApp',
+  'Website',
+  'Google Drive',
+  'Other',
+  'None',
+]);
+
 export const propertyFormSchema = z.object({
   location: z.string().min(2, 'Location is required'),
   type: propertyTypeSchema,
@@ -35,6 +44,8 @@ export const propertyFormSchema = z.object({
   owner_name: z.string().min(2, 'Owner name is required'),
   owner_contact: z.string().min(10, 'Valid contact number is required'),
   photos: z.array(z.string()).default([]),
+  photo_source_type: photoSourceTypeSchema.default('None'),
+  photo_link: z.string().nullable().optional(),
   status: propertyStatusSchema.default('Available'),
   notes: z.string().nullable().optional(),
 });

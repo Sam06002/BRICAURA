@@ -37,6 +37,14 @@ export type TenantStatus =
   | 'Closed'
   | 'Lost';
 
+export type PhotoSourceType =
+  | 'Facebook'
+  | 'WhatsApp'
+  | 'Website'
+  | 'Google Drive'
+  | 'Other'
+  | 'None';
+
 // ==============================================================================
 // 2. USER PROFILE TYPES
 // ==============================================================================
@@ -74,7 +82,9 @@ export interface Property {
   is_immediate: boolean;
   owner_name: string;
   owner_contact: string;
-  photos: string[]; // Supabase storage URLs
+  photos?: string[]; // Optional for backward compatibility
+  photo_source_type: PhotoSourceType;
+  photo_link: string | null;
   status: PropertyStatus;
   notes: string | null;
   created_by: string; // references auth.users(id)
@@ -95,6 +105,8 @@ export interface PropertyInsert {
   owner_name: string;
   owner_contact: string;
   photos?: string[];
+  photo_source_type?: PhotoSourceType;
+  photo_link?: string | null;
   status?: PropertyStatus;
   notes?: string | null;
   created_by: string;

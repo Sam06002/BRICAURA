@@ -107,6 +107,8 @@ CREATE TABLE IF NOT EXISTS public.properties (
   owner_name TEXT NOT NULL,
   owner_contact TEXT NOT NULL,
   photos TEXT[] NOT NULL DEFAULT '{}',
+  photo_source_type TEXT NOT NULL DEFAULT 'None' CHECK (photo_source_type IN ('Facebook', 'WhatsApp', 'Website', 'Google Drive', 'Other', 'None')),
+  photo_link TEXT,
   status TEXT NOT NULL DEFAULT 'Available' CHECK (status IN ('Available', 'Rented', 'Under Discussion')),
   notes TEXT,
   created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
