@@ -1,0 +1,37 @@
+import { z } from 'zod';
+import { propertyTypeSchema } from './property';
+
+export const tenantStatusSchema = z.enum([
+  'New',
+  'Site Visit Done',
+  'Negotiating',
+  'Closed',
+  'Lost',
+]);
+
+export const furnishingPreferenceSchema = z.enum([
+  'Unfurnished',
+  'Semi-furnished',
+  'Fully-furnished',
+  'Any',
+]);
+
+export const tenantFormSchema = z.object({
+  name: z.string().min(2, 'Tenant name is required'),
+  contact: z.string().min(10, 'Valid contact number is required'),
+  budget_min: z.coerce.number().min(0, 'Minimum budget must be positive'),
+  budget_max: z.coerce.number().min(0, 'Maximum budget must be positive'),
+  preferred_locations: z.array(z.string()).min(1, 'At least one preferred location is required'),
+  preferred_type: z.array(propertyTypeSchema).min(1, 'At least one property type is required'),
+  furnishing_preference: furnishingPreferenceSchema.default('Any'),
+  move_in_date: z.string().min(1, 'Target move-in date is required'),
+  special_requirements: z.string().nullable().optional(),
+  status: tenantStatusSchema.default('New'),
+  notes: z.string().nullable().optional(),
+}).refine((data) => data.budget_max >= data.budget_min, {
+  message: 'Maximum budget must be greater than or equal to minimum budget',
+  path: ['budget_max'],
+});
+
+export type TenantFormData = z.infer<typeof tenantFormSchema>;
+
