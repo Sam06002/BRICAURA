@@ -20,3 +20,4 @@ This folder contains the complete SQL schema and configurations for Supabase.
 6. Click **Run**.
 7. Confirm in the **Table Editor** that `properties`, `tenants`, and `profiles` are created.
 8. Confirm in **Storage** that the `property-photos` bucket is created.
+

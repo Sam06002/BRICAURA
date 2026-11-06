@@ -53,8 +53,8 @@ export interface UserProfile {
   role?: string;
 }
 
-export type UserProfileInsert = Omit<UserProfile, 'created_at' | 'updated_at'>;
-export type UserProfileUpdate = Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>>;
+export type UserProfileInsert = Partial<UserProfile> & { id: string; email: string };
+export type UserProfileUpdate = Partial<UserProfile>;
 
 // ==============================================================================
 // 3. PROPERTY TYPES
@@ -80,7 +80,26 @@ export interface Property {
   created_by: string; // references auth.users(id)
 }
 
-export type PropertyInsert = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
+export interface PropertyInsert {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+  location: string;
+  type: PropertyType;
+  rent: number;
+  deposit: number;
+  furnishing: FurnishingType;
+  amenities?: string[];
+  available_from: string;
+  is_immediate?: boolean;
+  owner_name: string;
+  owner_contact: string;
+  photos?: string[];
+  status?: PropertyStatus;
+  notes?: string | null;
+  created_by: string;
+}
+
 export type PropertyUpdate = Partial<PropertyInsert>;
 
 // ==============================================================================
@@ -105,7 +124,24 @@ export interface Tenant {
   created_by: string; // references auth.users(id)
 }
 
-export type TenantInsert = Omit<Tenant, 'id' | 'created_at' | 'updated_at'>;
+export interface TenantInsert {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+  name: string;
+  contact: string;
+  budget_min: number;
+  budget_max: number;
+  preferred_locations?: string[];
+  preferred_type?: PropertyType[];
+  furnishing_preference: FurnishingPreference;
+  move_in_date: string;
+  special_requirements?: string | null;
+  status?: TenantStatus;
+  notes?: string | null;
+  created_by: string;
+}
+
 export type TenantUpdate = Partial<TenantInsert>;
 
 // ==============================================================================
@@ -119,35 +155,25 @@ export interface Database {
         Row: UserProfile;
         Insert: UserProfileInsert;
         Update: UserProfileUpdate;
+        Relationships: [];
       };
       properties: {
         Row: Property;
         Insert: PropertyInsert;
         Update: PropertyUpdate;
+        Relationships: [];
       };
       tenants: {
         Row: Tenant;
         Insert: TenantInsert;
         Update: TenantUpdate;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
-    Functions: {
-      handle_new_user: {
-        Args: Record<string, never>;
-        Returns: unknown;
-      };
-      handle_updated_at: {
-        Args: Record<string, never>;
-        Returns: unknown;
-      };
-    };
-    Enums: {
-      property_type: PropertyType;
-      furnishing_type: FurnishingType;
-      property_status: PropertyStatus;
-      tenant_status: TenantStatus;
-    };
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
 
@@ -174,4 +200,3 @@ export interface TenantFilters {
   maxBudget?: number;
   location?: string;
 }
-

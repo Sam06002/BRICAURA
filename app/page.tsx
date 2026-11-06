@@ -10,11 +10,13 @@ export default function Home() {
             <Building2 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             <span className="font-bold text-xl tracking-tight">BRICAURA</span>
           </div>
-          <div className="flex items-center gap-3 text-sm text-slate-500">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-              Foundation Ready
-            </span>
-            <span className="hidden sm:inline">Next.js 15 + Supabase</span>
+          <div className="flex items-center gap-3 text-sm">
+            <a
+              href="/login"
+              className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+            >
+              Sign In to CRM
+            </a>
           </div>
         </div>
       </header>
@@ -23,11 +25,25 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-3xl mb-12">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
-            Next.js 15 + Supabase Architecture Ready
+            Next.js 15 + Supabase Real Estate CRM
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
-            The foundation for properties, tenants, authentication, and database schemas with Row Level Security (RLS) has been set up cleanly.
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">
+            Production-ready real estate management platform with automated tenant matchmaking, property inventory tracking, and PostgreSQL Row Level Security.
           </p>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-colors"
+            >
+              Open Dashboard
+            </a>
+            <a
+              href="/login"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              Agent Login / Register
+            </a>
+          </div>
         </div>
 
         {/* Foundation Grid */}

@@ -26,8 +26,8 @@ export const propertyStatusSchema = z.enum([
 export const propertyFormSchema = z.object({
   location: z.string().min(2, 'Location is required'),
   type: propertyTypeSchema,
-  rent: z.coerce.number().positive('Rent must be greater than 0'),
-  deposit: z.coerce.number().min(0, 'Deposit must be 0 or positive'),
+  rent: z.number().positive('Rent must be greater than 0'),
+  deposit: z.number().min(0, 'Deposit must be 0 or positive'),
   furnishing: furnishingSchema,
   amenities: z.array(z.string()).default([]),
   available_from: z.string().min(1, 'Available date is required'),
@@ -40,4 +40,3 @@ export const propertyFormSchema = z.object({
 });
 
 export type PropertyFormData = z.infer<typeof propertyFormSchema>;
-
