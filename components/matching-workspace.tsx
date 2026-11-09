@@ -13,7 +13,7 @@ import { CheckCircle, MapPin, Phone, Sparkles } from 'lucide-react';
 type Match = { property: Property; tenant: Tenant; score: number; reasons: string[] };
 
 function normalize(value: string) {
-  return value.trim().toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ');
+  return value.trim().toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ');
 }
 
 function scoreMatch(tenant: Tenant, property: Property): { score: number; reasons: string[] } {
