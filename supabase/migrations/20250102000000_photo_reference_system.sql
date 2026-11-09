@@ -32,3 +32,4 @@ WHERE photo_source_type IS NULL;
 ALTER TABLE public.properties
 ALTER COLUMN photo_source_type SET NOT NULL,
 ALTER COLUMN photo_source_type SET DEFAULT 'None';
+
