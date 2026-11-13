@@ -89,9 +89,36 @@ export default async function DashboardPage() {
 
   // A. Check tenants
   for (const t of tenants) {
-    const createdAtMs = new Date(t.created_at).getTime();
+    if (t.status === 'Closed' || t.status === 'Lost') continue;
 
-    if (t.status === 'Negotiating') {
+    const createdAtMs = new Date(t.created_at).getTime();
+    const hasFollowUp = !!t.next_follow_up;
+    const isOverdue = hasFollowUp && t.next_follow_up! < todayStr;
+    const isDueToday = hasFollowUp && t.next_follow_up! === todayStr;
+
+    if (isOverdue) {
+      attentionItems.push({
+        id: `tenant-${t.id}`,
+        type: 'tenant',
+        title: t.name,
+        subtitle: `Follow-up overdue (${formatDate(t.next_follow_up!)}) • ${t.preferred_type.join(', ')}`,
+        badgeText: 'Overdue',
+        badgeColorClass: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800',
+        href: `/tenants/${t.id}`,
+        priority: 1, // Highest urgency: overdue follow-up
+      });
+    } else if (isDueToday) {
+      attentionItems.push({
+        id: `tenant-${t.id}`,
+        type: 'tenant',
+        title: t.name,
+        subtitle: `Follow-up due today • Budget ${formatCurrency(Number(t.budget_min))} - ${formatCurrency(Number(t.budget_max))}`,
+        badgeText: 'Due Today',
+        badgeColorClass: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
+        href: `/tenants/${t.id}`,
+        priority: 2, // Second: follow-up due today
+      });
+    } else if (t.status === 'Negotiating') {
       attentionItems.push({
         id: `tenant-${t.id}`,
         type: 'tenant',
@@ -100,7 +127,7 @@ export default async function DashboardPage() {
         badgeText: 'Negotiating',
         badgeColorClass: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
         href: `/tenants/${t.id}`,
-        priority: 1, // Highest urgency
+        priority: 3, // Third: negotiating
       });
     } else if (t.status === 'New' && createdAtMs < threeDaysAgoMs) {
       const daysAgo = Math.max(3, Math.floor((now.getTime() - createdAtMs) / (24 * 60 * 60 * 1000)));
@@ -112,7 +139,7 @@ export default async function DashboardPage() {
         badgeText: `Untouched ${daysAgo}d`,
         badgeColorClass: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800',
         href: `/tenants/${t.id}`,
-        priority: 2,
+        priority: 4, // Fourth: old untouched lead
       });
     }
   }
@@ -132,7 +159,7 @@ export default async function DashboardPage() {
           badgeText: p.is_immediate ? 'Immediate' : 'Vacant Now',
           badgeColorClass: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
           href: `/properties/${p.id}`,
-          priority: 3,
+          priority: 5,
         });
       }
     }

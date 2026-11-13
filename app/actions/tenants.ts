@@ -77,6 +77,7 @@ export async function updateTenant(id: string, updates: Partial<Tenant>) {
   }
 
   revalidatePath('/tenants');
+  revalidatePath(`/tenants/${id}`);
   revalidatePath('/dashboard');
   revalidatePath('/matching');
   return { success: true };
@@ -91,6 +92,7 @@ export async function deleteTenant(id: string) {
   }
 
   revalidatePath('/tenants');
+  revalidatePath(`/tenants/${id}`);
   revalidatePath('/dashboard');
   revalidatePath('/matching');
   return { success: true };

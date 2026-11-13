@@ -71,6 +71,7 @@ export function AddTenantDialog({ onTenantAdded }: AddTenantDialogProps) {
       preferred_type: ['2BHK', '3BHK'],
       furnishing_preference: 'Semi-furnished',
       move_in_date: new Date().toISOString().split('T')[0],
+      next_follow_up: '',
       special_requirements: '',
       status: 'New',
       notes: '',
@@ -325,6 +326,15 @@ export function AddTenantDialog({ onTenantAdded }: AddTenantDialogProps) {
                 <Label htmlFor="move_in">Expected Move-in Date</Label>
                 <Input id="move_in" type="date" required {...register('move_in_date')} />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="next_follow_up">Next Follow-up Date (Optional)</Label>
+              <Input
+                id="next_follow_up"
+                type="date"
+                {...register('next_follow_up')}
+              />
             </div>
           </div>
 

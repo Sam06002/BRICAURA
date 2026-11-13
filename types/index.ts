@@ -130,6 +130,7 @@ export interface Tenant {
   preferred_type: PropertyType[];
   furnishing_preference: FurnishingPreference;
   move_in_date: string; // ISO date string (YYYY-MM-DD)
+  next_follow_up: string | null;
   special_requirements: string | null;
   status: TenantStatus;
   notes: string | null;
@@ -148,6 +149,7 @@ export interface TenantInsert {
   preferred_type?: PropertyType[];
   furnishing_preference: FurnishingPreference;
   move_in_date: string;
+  next_follow_up?: string | null;
   special_requirements?: string | null;
   status?: TenantStatus;
   notes?: string | null;

@@ -10,6 +10,7 @@ import { EditTenantDialog } from '@/components/edit-tenant-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency, formatDate } from '@/utils';
 import {
@@ -47,9 +48,31 @@ export function TenantDetailView({
   const [isDeleting, setIsDeleting] = useState(false);
   const [, startTransition] = useTransition();
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [followUpDate, setFollowUpDate] = useState<string>(initialTenant.next_follow_up || '');
+  const [isUpdatingFollowUp, setIsUpdatingFollowUp] = useState(false);
 
   const getCleanPhone = (phone: string) => phone.replace(/\D/g, '');
   const cleanPhone = getCleanPhone(tenant.contact);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const followUp = tenant.next_follow_up;
+  const isOverdue = !!followUp && followUp < todayStr;
+  const isDueToday = !!followUp && followUp === todayStr;
+
+  const handleSaveFollowUp = (dateValue: string | null) => {
+    setIsUpdatingFollowUp(true);
+    startTransition(async () => {
+      const res = await updateTenant(tenant.id, { next_follow_up: dateValue });
+      setIsUpdatingFollowUp(false);
+      if (res.success) {
+        setTenant((prev) => ({ ...prev, next_follow_up: dateValue }));
+        setFollowUpDate(dateValue || '');
+        router.refresh();
+      } else {
+        alert(res.error || 'Failed to update follow-up date');
+      }
+    });
+  };
 
   // Status Colors
   const getStatusColor = (status: TenantStatus) => {
@@ -133,6 +156,16 @@ export function TenantDetailView({
                   <SelectItem value="Lost">Lost</SelectItem>
                 </SelectContent>
               </Select>
+              {isOverdue && (
+                <Badge variant="outline" className="text-xs font-semibold bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
+                  Follow-up Overdue ({formatDate(followUp!)})
+                </Badge>
+              )}
+              {isDueToday && (
+                <Badge variant="outline" className="text-xs font-semibold bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                  Follow-up Due Today
+                </Badge>
+              )}
               <span className="text-xs text-slate-400">
                 Created on {formatDate(tenant.created_at)}
               </span>
@@ -379,6 +412,77 @@ export function TenantDetailView({
                   <MessageCircle className="w-3.5 h-3.5" />
                   WhatsApp
                 </a>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Next Follow-up Card & Quick Date Control */}
+          <Card className="border-slate-200 dark:border-slate-800">
+            <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-indigo-600" />
+                  Next Follow-up
+                </CardTitle>
+                {isOverdue && (
+                  <Badge variant="outline" className="text-xs font-semibold bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
+                    Overdue
+                  </Badge>
+                )}
+                {isDueToday && (
+                  <Badge variant="outline" className="text-xs font-semibold bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                    Due today
+                  </Badge>
+                )}
+                {!followUp && (
+                  <Badge variant="outline" className="text-xs text-slate-500 border-slate-200 dark:border-slate-700">
+                    No follow-up set
+                  </Badge>
+                )}
+              </div>
+              <CardDescription className="text-xs">
+                {followUp ? (
+                  <span>Scheduled for: <strong className="text-slate-800 dark:text-slate-200">{formatDate(followUp)}</strong></span>
+                ) : (
+                  <span>No follow-up set</span>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-5 space-y-3">
+              <div className="space-y-1.5">
+                <label htmlFor="quick-follow-up" className="text-xs font-medium text-slate-500 block">
+                  Update Follow-up Date
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="quick-follow-up"
+                    type="date"
+                    value={followUpDate}
+                    onChange={(e) => setFollowUpDate(e.target.value)}
+                    className="h-8 text-xs"
+                    disabled={isUpdatingFollowUp}
+                  />
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+                    disabled={isUpdatingFollowUp || followUpDate === (tenant.next_follow_up || '') || !followUpDate}
+                    onClick={() => handleSaveFollowUp(followUpDate || null)}
+                  >
+                    {isUpdatingFollowUp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Set'}
+                  </Button>
+                  {(tenant.next_follow_up || followUpDate) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 dark:border-rose-900 shrink-0"
+                      disabled={isUpdatingFollowUp}
+                      onClick={() => handleSaveFollowUp(null)}
+                      title="Clear follow-up date"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

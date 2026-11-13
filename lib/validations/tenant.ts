@@ -25,6 +25,15 @@ export const tenantFormSchema = z.object({
   preferred_type: z.array(propertyTypeSchema).min(1, 'At least one property type is required'),
   furnishing_preference: furnishingPreferenceSchema.default('Any'),
   move_in_date: z.string().min(1, 'Target move-in date is required'),
+  next_follow_up: z
+    .string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => !val || val === '' || /^\d{4}-\d{2}-\d{2}$/.test(val),
+      'Follow-up date must be in YYYY-MM-DD format'
+    )
+    .transform((val) => (val && val.trim() !== '' ? val.trim() : null)),
   special_requirements: z.string().nullable().optional(),
   status: tenantStatusSchema.default('New'),
   notes: z.string().nullable().optional(),

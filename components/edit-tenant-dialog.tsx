@@ -76,6 +76,7 @@ export function EditTenantDialog({
       preferred_type: tenant.preferred_type || ['2BHK'],
       furnishing_preference: tenant.furnishing_preference || 'Semi-furnished',
       move_in_date: tenant.move_in_date,
+      next_follow_up: tenant.next_follow_up || '',
       special_requirements: tenant.special_requirements || '',
       status: tenant.status || 'New',
       notes: tenant.notes || '',
@@ -338,6 +339,15 @@ export function EditTenantDialog({
                   {...register('move_in_date')}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-next-follow-up">Next Follow-up Date (Optional)</Label>
+              <Input
+                id="edit-next-follow-up"
+                type="date"
+                {...register('next_follow_up')}
+              />
             </div>
           </div>
 

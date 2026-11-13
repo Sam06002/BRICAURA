@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS public.tenants (
   preferred_type TEXT[] NOT NULL DEFAULT '{}',
   furnishing_preference TEXT NOT NULL CHECK (furnishing_preference IN ('Unfurnished', 'Semi-furnished', 'Fully-furnished', 'Any')),
   move_in_date DATE NOT NULL,
+  next_follow_up DATE,
   special_requirements TEXT,
   status TEXT NOT NULL DEFAULT 'New' CHECK (status IN ('New', 'Site Visit Done', 'Negotiating', 'Closed', 'Lost')),
   notes TEXT,
