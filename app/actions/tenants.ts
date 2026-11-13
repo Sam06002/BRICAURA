@@ -19,6 +19,21 @@ export async function getTenants() {
   return (data as Tenant[]) || [];
 }
 
+export async function getTenantById(id: string): Promise<Tenant | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('tenants')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as Tenant;
+}
+
 export async function createTenant(payload: Omit<TenantInsert, 'created_by'>) {
   const supabase = await createClient();
   const {

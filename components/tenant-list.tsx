@@ -21,6 +21,7 @@ import {
   Sparkles,
   AlertCircle,
   Armchair,
+  ArrowUpRight,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -173,7 +174,15 @@ export function TenantList({ initialTenants }: TenantListProps) {
                 <div>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="text-lg font-bold truncate">{tenant.name}</CardTitle>
+                      <CardTitle className="text-lg font-bold truncate">
+                        <Link
+                          href={`/tenants/${tenant.id}`}
+                          className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                          title="View tenant details"
+                        >
+                          {tenant.name}
+                        </Link>
+                      </CardTitle>
 
                       <Select
                         value={tenant.status}
@@ -297,8 +306,16 @@ export function TenantList({ initialTenants }: TenantListProps) {
                     </a>
                   </div>
 
-                  {/* Actions: Match, Edit, Delete */}
+                  {/* Actions: View, Match, Edit, Delete */}
                   <div className="flex items-center gap-1">
+                    <Link
+                      href={`/tenants/${tenant.id}`}
+                      className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                      title="View tenant details"
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </Link>
+
                     <Link
                       href="/matching"
                       className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"

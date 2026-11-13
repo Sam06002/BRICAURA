@@ -99,7 +99,7 @@ export default async function DashboardPage() {
         subtitle: `In negotiation • Budget ${formatCurrency(Number(t.budget_min))} - ${formatCurrency(Number(t.budget_max))}`,
         badgeText: 'Negotiating',
         badgeColorClass: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800',
-        href: '/tenants',
+        href: `/tenants/${t.id}`,
         priority: 1, // Highest urgency
       });
     } else if (t.status === 'New' && createdAtMs < threeDaysAgoMs) {
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
         subtitle: `New lead uncontacted for ${daysAgo} days • Looking for ${t.preferred_type.join(', ')}`,
         badgeText: `Untouched ${daysAgo}d`,
         badgeColorClass: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800',
-        href: '/tenants',
+        href: `/tenants/${t.id}`,
         priority: 2,
       });
     }
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
             : `Available since ${formatDate(p.available_from)} • ${formatCurrency(Number(p.rent))}/mo`,
           badgeText: p.is_immediate ? 'Immediate' : 'Vacant Now',
           badgeColorClass: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
-          href: '/properties',
+          href: `/properties/${p.id}`,
           priority: 3,
         });
       }
@@ -451,46 +451,63 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 topMatches.map((match, idx) => (
-                  <Link
+                  <div
                     key={`match-${idx}-${match.tenant.id}-${match.property.id}`}
-                    href="/matching"
-                    className="group block p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 hover:bg-slate-100/70 dark:bg-slate-900/40 dark:hover:bg-slate-800/60 transition-colors"
+                    className="p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 hover:bg-slate-100/70 dark:bg-slate-900/40 dark:hover:bg-slate-800/60 transition-colors flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {match.tenant.name}
-                          </span>
-                          <span className="text-xs text-slate-400">→</span>
-                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
-                            {match.property.type}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 truncate">
-                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span className="truncate">{match.property.location}</span>
-                          <span>•</span>
-                          <span className="font-medium text-slate-700 dark:text-slate-300 shrink-0">
-                            {formatCurrency(Number(match.property.rent))}/mo
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
-                            match.score >= 85
-                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                              : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
-                          }`}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/tenants/${match.tenant.id}`}
+                          className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                          title="View tenant profile"
                         >
-                          {match.score}%
+                          {match.tenant.name}
+                        </Link>
+                        <span className="text-xs text-slate-400">→</span>
+                        <Link
+                          href={`/properties/${match.property.id}`}
+                          className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                          title="View property details"
+                        >
+                          {match.property.type}
+                        </Link>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 truncate">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <Link
+                          href={`/properties/${match.property.id}`}
+                          className="truncate hover:text-indigo-600 transition-colors"
+                          title="View property details"
+                        >
+                          {match.property.location}
+                        </Link>
+                        <span>•</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300 shrink-0">
+                          {formatCurrency(Number(match.property.rent))}/mo
                         </span>
-                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
                       </div>
                     </div>
-                  </Link>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                          match.score >= 85
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+                        }`}
+                      >
+                        {match.score}%
+                      </span>
+                      <Link
+                        href={`/properties/${match.property.id}`}
+                        className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors"
+                        title="View property details"
+                      >
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
                 ))
               )}
             </CardContent>

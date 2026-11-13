@@ -19,6 +19,21 @@ export async function getProperties() {
   return (data as Property[]) || [];
 }
 
+export async function getPropertyById(id: string): Promise<Property | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as Property;
+}
+
 export async function createProperty(payload: Omit<PropertyInsert, 'created_by'>) {
   const supabase = await createClient();
   const {

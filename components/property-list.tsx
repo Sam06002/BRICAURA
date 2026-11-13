@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { Property, PropertyStatus } from '@/types';
 import { updateProperty, deleteProperty } from '@/app/actions/properties';
 import { EditPropertyDialog } from '@/components/edit-property-dialog';
@@ -23,6 +24,7 @@ import {
   FolderOpen,
   Globe,
   Share2,
+  ArrowUpRight,
 } from 'lucide-react';
 
 interface PropertyListProps {
@@ -204,10 +206,14 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
 
                   <CardContent className="space-y-3.5 text-sm">
                     {/* Location */}
-                    <div className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
-                      <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <span className="font-medium line-clamp-1">{property.location}</span>
-                    </div>
+                    <Link
+                      href={`/properties/${property.id}`}
+                      className="flex items-start gap-2 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                      title="View property details"
+                    >
+                      <MapPin className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 shrink-0 mt-0.5 transition-colors" />
+                      <span className="font-medium line-clamp-1 group-hover:underline">{property.location}</span>
+                    </Link>
 
                     {/* Photo Reference Indicator */}
                     <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -320,6 +326,14 @@ export function PropertyList({ initialProperties }: PropertyListProps) {
                   </a>
 
                   <div className="flex items-center gap-1">
+                    <Link
+                      href={`/properties/${property.id}`}
+                      className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                      title="View details"
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </Link>
+
                     <button
                       type="button"
                       onClick={() => setEditingProperty(property)}
